@@ -440,20 +440,3 @@ textarea:focus {
     to { width: 0%; }
 }
 
-.input-group {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.input-group input {
-  width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't break the layout */
-}
-
-/* Optional: Add a hover effect to the eye */
-.input-group span:hover {
-  filter: brightness(0.8);
-  transform: scale(1.1);
-  transition: 0.2s ease;
-}
