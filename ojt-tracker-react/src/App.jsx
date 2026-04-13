@@ -5,7 +5,8 @@ import Admin from './pages/Admin';
 import Dashboard from './pages/Dashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import UpdatePassword from './pages/UpdatePassword';
-
+import Logs from './pages/Logs';
+import AdminLogs from './pages/AdminLogs'
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/update-password" element={<UpdatePassword />} />
+        <Route path="/logs" element={<Logs />} />
+        <Route path="/admin-logs" element={<AdminLogs />} />
       </Routes>
     </Router>
   );
