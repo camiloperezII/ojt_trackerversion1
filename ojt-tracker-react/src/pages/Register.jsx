@@ -22,14 +22,14 @@ const normalizeSchoolName = (name) => {
 };
 
 export default function Register() {
-  const [formData, setFormData] = useState({
-    email: '',
-    username: '',
-    fullName: '',
-    school: '',
-    password: '',
-    totalRequired: 600
-  })
+const [formData, setFormData] = useState({
+  email: '',
+  username: '',
+  fullName: '',
+  school: '',
+  password: '',
+  totalRequired: '600' // Set as string to match input behavior
+})
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)

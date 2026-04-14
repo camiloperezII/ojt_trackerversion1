@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useNavigate } from 'react-router-dom'
 
-// --- 1. HELPER ALGORITHMS ---
+// --- 1. MASTER HELPER ALGORITHMS ---
+const formatStandardTime = (timeStr) => {
+  if (!timeStr) return "";
+  let [hours, minutes] = timeStr.split(':');
+  hours = parseInt(hours);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${hours}:${minutes} ${ampm}`;
+};
+
 const calculateHoursWithLunch = (timeIn, timeOut) => {
   if (!timeIn || !timeOut) return "0.00";
   const start = new Date(`1970-01-01T${timeIn}:00`);
@@ -40,21 +49,22 @@ export default function Dashboard() {
   const [recentLogs, setRecentLogs] = useState([]) 
   const [totalHours, setTotalHours] = useState(0)
   const [profile, setProfile] = useState(null)
-  const requiredHours = 600
+  const [loading, setLoading] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const navigate = useNavigate()
 
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
   const [timeIn, setTimeIn] = useState('')
   const [timeOut, setTimeOut] = useState('')
   const [task, setTask] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [editingId, setEditingId] = useState(null)
+
+  const requiredHours = profile?.total_required || 600
 
   useEffect(() => {
     fetchUserAndData()
   }, [])
 
-  // --- DATA FETCHING (OPTIMIZED) ---
+  // --- DATA FETCHING ---
   const fetchUserAndData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -66,7 +76,6 @@ export default function Dashboard() {
         .single()
       if (profileData) {
         setProfile(profileData)
-        // Parallel fetching for 100-user scalability
         await Promise.all([
           fetchRecentLogs(profileData.id),
           fetchTotalApprovedHours(profileData.id)
@@ -84,7 +93,7 @@ export default function Dashboard() {
       .select('*')
       .eq('user_id', userId)
       .order('log_date', { ascending: false })
-      .limit(5) // Only fetch what we need for the dashboard
+      .limit(5)
     if (data) setRecentLogs(data)
   }
 
@@ -124,32 +133,26 @@ export default function Dashboard() {
   const cancelEdit = () => { 
     setEditingId(null); 
     setLogDate(new Date().toISOString().split('T')[0]); 
-    setTimeIn(''); 
-    setTimeOut(''); 
-    setTask(''); 
+    setTimeIn(''); setTimeOut(''); setTask(''); 
   }
 
   const handleSaveLog = async (e) => {
     e.preventDefault(); 
     if (!profile) return;
     setLoading(true);
-    const hours = calculateHoursWithLunch(timeIn, timeOut);
     const logData = { 
         user_id: profile.id, 
         log_date: logDate, 
         time_in: timeIn, 
         time_out: timeOut, 
-        hours_rendered: hours, 
+        hours_rendered: calculateHoursWithLunch(timeIn, timeOut), 
         task_description: task, 
         status: 'pending' 
     }
     
-    let error;
-    if (editingId) { 
-        error = (await supabase.from('logs').update(logData).eq('id', editingId)).error; 
-    } else { 
-        error = (await supabase.from('logs').insert([logData])).error; 
-    }
+    const { error } = editingId 
+        ? await supabase.from('logs').update(logData).eq('id', editingId)
+        : await supabase.from('logs').insert([logData]);
 
     if (!error) { 
       cancelEdit(); 
@@ -163,17 +166,17 @@ export default function Dashboard() {
   const progressPercent = Math.min((totalHours / requiredHours) * 100, 100)
 
   return (
-    <div>
+    <div className="admin-page">
       <nav className="navbar">
         <div className="nav-container">
           <div className="logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src="/Paombong.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
-            <span style={{ fontWeight: 'bold' }}> OJT-TRACKER</span>
+            <img src="/Paombong.png" alt="Logo" style={{ height: '40px' }} />
+            <span style={{ fontWeight: 'bold', color: 'var(--nav-text)', fontSize: '18px' }}> OJT TRACKER </span>
           </div>
           <div className="nav-links">
-            <button className="nav-btn" onClick={() => navigate('/logs')}>MY LOG HISTORY</button>
+            <button className="back-btn" onClick={() => navigate('/logs')}>LOG HISTORY</button>
             {profile?.role === 'admin' && (
-              <button className="nav-btn" onClick={() => navigate('/admin')}>ADMIN PANEL</button>
+              <button className="back-btn" onClick={() => navigate('/admin')}>ADMIN PANEL</button>
             )}
             <button className="logout-btn" onClick={() => navigate('/')}>Logout</button>
           </div>
@@ -182,89 +185,138 @@ export default function Dashboard() {
 
       <div className="container">
         <div style={{ marginBottom: '25px', marginTop: '10px' }}>
-          <h2 style={{ color: '#2c3e50', fontSize: '26px', margin: 0 }}>
+          <h2 style={{ color: 'var(--text-main)', fontSize: '26px', margin: 0 }}>
             {getGreeting()}, {profile?.full_name?.split(' ')[0] || 'Intern'}!
           </h2>
-          <p style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '5px' }}>Ready to track your progress today?</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '5px' }}>Logged in as Intern at Paombong Municipal Office.</p>
         </div>
 
-        <div className="stats">
-          <div className="card"><h3>Total Approved</h3><p>{totalHours.toFixed(2)} hrs</p></div>
-          <div className="card" style={{ borderTopColor: '#f39c12' }}><h3>Remaining</h3><p>{remaining.toFixed(2)} hrs</p></div>
-          <div className="card" style={{ borderTopColor: '#27ae60' }}><h3>Est. Finish Date</h3><p style={{ color: '#27ae60', fontWeight: 'bold' }}>{calculateEstimatedFinish(remaining)}</p></div>
+        {/* Master Stat Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '25px' }}>
+          <div className="filter-card stat-box">
+            <label>TOTAL APPROVED</label>
+            <p>{totalHours.toFixed(2)} hrs</p>
+          </div>
+          <div className="filter-card stat-box" style={{ borderColor: '#f39c12' }}>
+            <label>HOURS REMAINING</label>
+            <p>{remaining.toFixed(2)} hrs</p>
+          </div>
+          <div className="filter-card stat-box" style={{ borderColor: 'var(--primary-color)' }}>
+            <label>EST. COMPLETION</label>
+            <p style={{ fontSize: '18px' }}>{calculateEstimatedFinish(remaining)}</p>
+          </div>
         </div>
 
-        <div className="progress-bar"><div className="fill" style={{ width: `${progressPercent}%` }}></div></div>
+        {/* Master Progress Bar */}
+        <div className="master-progress-container">
+            <div className="master-progress-fill" style={{ width: `${progressPercent}%` }}>
+                <span className="progress-label">{progressPercent.toFixed(0)}%</span>
+            </div>
+        </div>
 
-        <form onSubmit={handleSaveLog}>
-          <h3>{editingId ? "Update Log Entry" : "Clock In / Out"}</h3>
-          <div className="input-group" style={{ gridColumn: 'span 2' }}>
-            <label>Log Date</label>
-            <input type="date" value={logDate} onChange={(e) => setLogDate(e.target.value)} required />
+        {/* Master Clock In/Out Form */}
+        <form onSubmit={handleSaveLog} className="filter-card form-container">
+          <h3 style={{ margin: '0 0 15px 0', color: 'var(--text-main)' }}>{editingId ? "Update Activity Log" : "New Daily Time Record"}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+              <div className="input-unit">
+                <label>Log Date</label>
+                <input type="date" value={logDate} onChange={(e) => setLogDate(e.target.value)} required className="blocky-input" />
+              </div>
+              <div className="input-unit">
+                <label>Time In</label>
+                <input type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} required className="blocky-input" />
+              </div>
+              <div className="input-unit">
+                <label>Time Out</label>
+                <input type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} required className="blocky-input" />
+              </div>
           </div>
-          <div className="input-group">
-            <label>Time In</label>
-            <input type="time" value={timeIn} onChange={(e) => setTimeIn(e.target.value)} required />
+          <div className="input-unit" style={{ marginTop: '15px' }}>
+            <label>Task Description / Work Details</label>
+            <textarea placeholder="Specify work done..." value={task} onChange={(e) => setTask(e.target.value)} required className="blocky-input" style={{ minHeight: '80px' }} />
           </div>
-          <div className="input-group">
-            <label>Time Out</label>
-            <input type="time" value={timeOut} onChange={(e) => setTimeOut(e.target.value)} required />
+          
+          <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+            <button type="submit" className="export-btn" disabled={loading} style={{ flex: 2 }}>
+                {loading ? 'PROCESSING...' : editingId ? 'UPDATE RECORD' : 'SAVE DAILY RECORD'}
+            </button>
+            {editingId && <button type="button" onClick={cancelEdit} className="logout-btn" style={{ flex: 1 }}>CANCEL</button>}
           </div>
-          <div className="input-group" style={{ gridColumn: 'span 2' }}>
-            <label>Task Description</label>
-            <textarea placeholder="Work details..." value={task} onChange={(e) => setTask(e.target.value)} required />
-          </div>
-          <div style={{ gridColumn: 'span 2', display: 'flex', gap: '10px' }}>
-            <button type="submit" className="login-btn" disabled={loading} style={{ flex: 2 }}>{loading ? 'SAVING...' : editingId ? 'UPDATE LOG' : 'SAVE DAILY LOG'}</button>
-            {editingId && <button type="button" onClick={cancelEdit} style={{ flex: 1, backgroundColor: '#7f8c8d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>CANCEL</button>}
-          </div>
-          <p style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '10px' }}>*Automatically reduce 1hr if 12pm - 1pm is included*</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '10px', fontStyle: 'italic' }}>*System automatically deducts 1hr lunch break if 12PM-1PM is overlapped.</p>
         </form>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '40px' }}>
-          <h3>Recent Activity</h3>
-          <button onClick={() => navigate('/logs')} style={{ background: 'none', color: '#27ae60', border: 'none', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-            VIEW FULL HISTORY →
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '40px', marginBottom: '15px' }}>
+          <h3 style={{ color: 'var(--text-main)', margin: 0 }}>Recent Activity Feed</h3>
+          <button onClick={() => navigate('/logs')} className="text-link-btn">VIEW FULL HISTORY →</button>
         </div>
 
-        <table>
-          <thead>
-            <tr><th>Date</th><th>In/Out</th><th>Hrs</th><th>Status</th><th>Task</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {recentLogs.map((log) => (
-              <tr key={log.id}>
-                <td>{log.log_date}</td>
-                <td style={{ fontSize: '12px' }}>{log.time_in} - {log.time_out}</td>
-                <td><strong>{log.hours_rendered}</strong></td>
-                <td>
-                  <span style={{ 
-                    fontSize: '10px', padding: '3px 8px', borderRadius: '10px', fontWeight: 'bold', textTransform: 'uppercase', 
-                    backgroundColor: log.status === 'approved' ? '#eafaf1' : log.status === 'rejected' ? '#fdedec' : '#fef9e7', 
-                    color: log.status === 'approved' ? '#27ae60' : log.status === 'rejected' ? '#e74c3c' : '#f39c12' 
-                  }}>
-                    {log.status || 'pending'}
-                  </span>
-                </td>
-                <td style={{ fontSize: '12px', color: '#666' }}>{log.task_description}</td>
-                <td>
-                  <div style={{ display: 'flex', gap: '5px' }}>
-                    <button onClick={() => startEdit(log)} style={{ padding: '5px 10px', fontSize: '10px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>EDIT</button>
-                    <button onClick={() => handleDelete(log.id)} style={{ padding: '5px 10px', fontSize: '10px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>DEL</button>
-                  </div>
-                </td>
+        {/* Master Table */}
+        <div className="table-container">
+          <table className="master-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>IN / OUT</th>
+                <th>HRS</th>
+                <th>STATUS</th>
+                <th>TASKS</th>
+                <th>ACTIONS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {recentLogs.map((log) => (
+                <tr key={log.id}>
+                  <td><strong>{log.log_date}</strong></td>
+                  <td style={{ fontSize: '12px' }}>{formatStandardTime(log.time_in)} - {formatStandardTime(log.time_out)}</td>
+                  <td style={{ fontWeight: 'bold' }}>{log.hours_rendered}</td>
+                  <td><span className={`status-badge ${log.status || 'pending'}`}>{log.status || 'pending'}</span></td>
+                  <td style={{ fontSize: '11px', color: 'var(--text-muted)', maxWidth: '200px' }}>{log.task_description}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      <button onClick={() => startEdit(log)} className="mini-action-btn edit">EDIT</button>
+                      <button onClick={() => handleDelete(log.id)} className="mini-action-btn del">DEL</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .nav-btn { background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; transition: background 0.3s ease; margin-right: 10px; }
-        .nav-btn:hover { background-color: #219150; }
-        .logout-btn { background-color: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; transition: background 0.3s ease; }
-        .logout-btn:hover { background-color: #c0392b; }
+        .back-btn { background: var(--primary-color); color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; transition: 0.3s; margin-right: 10px; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; }
+        .export-btn { background: var(--navbar-bg); color: var(--nav-text); border: 3px solid #3E2723; box-shadow: 4px 4px 0px rgba(0,0,0,0.1); padding: 12px; font-weight: bold; font-size: 13px; cursor: pointer; width: 100%; }
+        
+        .filter-card { background: var(--card-bg); padding: 20px; border: 3px solid #3E2723; box-shadow: 6px 6px 0px rgba(0,0,0,0.1); margin-bottom: 25px; }
+        .stat-box { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+        .stat-box label { font-size: 10px; font-weight: bold; color: var(--text-muted); margin-bottom: 5px; }
+        .stat-box p { font-size: 22px; font-weight: bold; margin: 0; color: var(--text-main); }
+
+        .input-unit { display: flex; flex-direction: column; gap: 5px; }
+        .input-unit label { font-size: 11px; font-weight: bold; color: var(--text-muted); }
+        .blocky-input { padding: 10px; border: 2px solid #3E2723; background: var(--card-bg); color: var(--text-main); font-size: 13px; outline: none; box-sizing: border-box; width: 100%; }
+
+        .master-progress-container { height: 30px; background: rgba(0,0,0,0.05); border: 3px solid #3E2723; margin-bottom: 30px; position: relative; overflow: hidden; border-radius: 2px; }
+        .master-progress-fill { height: 100%; background: var(--primary-color); display: flex; align-items: center; justify-content: flex-end; transition: width 0.5s ease-in-out; }
+        .progress-label { color: white; font-weight: bold; font-size: 12px; padding-right: 10px; text-shadow: 1px 1px 0px rgba(0,0,0,0.5); }
+
+        .table-container { background: var(--card-bg); border: 3px solid #3E2723; box-shadow: 8px 8px 0px rgba(0,0,0,0.1); overflow: hidden; margin-bottom: 50px; }
+        .master-table { width: 100%; border-collapse: collapse; }
+        .master-table th { text-align: left; padding: 15px; background: rgba(0,0,0,0.05); color: var(--text-muted); font-size: 11px; text-transform: uppercase; border-bottom: 3px solid #3E2723; }
+        .master-table td { padding: 12px 15px; border-bottom: 1px solid rgba(0,0,0,0.05); color: var(--text-main); }
+        
+        .status-badge { font-size: 9px; font-weight: bold; text-transform: uppercase; padding: 4px 10px; border: 2px solid #3E2723; display: inline-block; }
+        .status-badge.approved { color: var(--primary-color); }
+        .status-badge.rejected { color: #e74c3c; background: #fff5f5; }
+        
+        .mini-action-btn { border: 2px solid #3E2723; padding: 4px 8px; font-size: 10px; font-weight: bold; cursor: pointer; color: white; transition: 0.1s; }
+        .mini-action-btn.edit { background: var(--primary-color); }
+        .mini-action-btn.del { background: #e74c3c; }
+        .mini-action-btn:hover { transform: translate(-1px, -1px); box-shadow: 2px 2px 0px #3E2723; }
+
+        .text-link-btn { background: none; border: none; color: var(--primary-color); font-weight: bold; font-size: 12px; cursor: pointer; }
       `}} />
     </div>
   )

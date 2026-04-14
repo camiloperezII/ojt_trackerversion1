@@ -1,3 +1,102 @@
+/* ============================================================
+   1. THEME VARIABLES 
+   ============================================================ */
+
+:root {
+    /* Default Paombong Green */
+    --primary-color: #27ae60;
+    --primary-hover: #219150;
+    --bg-color: #f4f7f6;
+    --card-bg: #ffffff;
+    --text-main: #2c3e50;
+    --navbar-bg: #2c3e50;
+    --nav-text: #27ae60;
+    --login-gradient: linear-gradient(135deg, #2c3e50 0%, #27ae60 100%);
+    --glass-bg: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme='coffee'] {
+    --primary-color: #6F4E37;
+    --primary-hover: #5D4037;
+    --bg-color: #D7CCC8;
+    --card-bg: #EFEBE9;
+    --text-main: #3E2723;
+    --text-muted: #5D4037;
+    --navbar-bg: #4E342E;
+    --nav-text: #EFEBE9;
+    --login-gradient: linear-gradient(135deg, #3E2723 0%, #6F4E37 100%);
+    --glass-bg: rgba(62, 39, 35, 0.5);
+}
+
+[data-theme='nintendo'] {
+    --primary-color: #a2211d;
+    --primary-hover: #8b1a16;
+    --bg-color: #cbd5e0;
+    --card-bg: #e2e8f0;
+    --text-main: #1a202c;
+    --text-muted: #4a5568;
+    --navbar-bg: #1a202c;
+    --nav-text: #a2211d;
+    --login-gradient: linear-gradient(135deg, #1a202c 0%, #cbd5e0 100%);
+    --glass-bg: rgba(26, 32, 44, 0.4);
+}
+
+/* ============================================================
+   2. BLOCKY UI COMPONENTS (Borders & Shadows)
+   ============================================================ */
+
+/* --- GLOBAL BLOCKY DEFAULTS --- */
+.card, 
+.login-card, 
+.status-badge {
+    border-radius: 0px !important; /* Forces sharp corners across all themes */
+    border: 3px solid #2c3e50;    /* Default Border */
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.1);
+    transition: transform 0.1s ease;
+}
+
+.login-card input {
+    border: 2px solid #2c3e50;
+    border-radius: 0px;
+}
+
+/* --- THEME SPECIFIC OVERRIDES --- */
+
+/* Coffee Theme: Espresso Accents */
+[data-theme='coffee'] .card, 
+[data-theme='coffee'] .login-card, 
+[data-theme='coffee'] .status-badge {
+    border-color: #3E2723;
+    box-shadow: 6px 6px 0px rgba(62, 39, 35, 0.2);
+}
+
+[data-theme='coffee'] .login-card input {
+    border-color: #3E2723;
+}
+
+/* Nintendo Theme: Controller Accents */
+[data-theme='nintendo'] .card, 
+[data-theme='nintendo'] .login-card, 
+[data-theme='nintendo'] .status-badge {
+    border-color: #212121;
+    box-shadow: 6px 6px 0px rgba(0,0,0,0.2);
+}
+
+[data-theme='nintendo'] .login-card input {
+    border-color: #212121;
+}
+
+/* Optional: Active effect for blocky buttons/cards */
+.card:active, .login-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+}
+
+
+/* ============================================================
+    YOUR ORIGINAL CODE 
+    ============================================================ */
+
 /* General Layout */
 body { 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -31,7 +130,7 @@ body {
     flex: 1; 
     text-align: center; 
     border-radius: 10px; 
-    border-top: 5px solid #27ae60; /* Changed to top for a cleaner look */
+    border-top: 5px solid #27ae60; 
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
@@ -56,14 +155,14 @@ body {
 /* Updated Form Styling for Clock In/Out */
 form {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Two columns for times */
+    grid-template-columns: 1fr 1fr; 
     gap: 15px;
     background: #f9f9f9;
     padding: 20px;
     border-radius: 8px;
 }
 
-form h3, form label { grid-column: span 2; } /* Make headers and full labels span across */
+form h3, form label { grid-column: span 2; } 
 
 input, select, textarea { 
     padding: 12px; 
@@ -176,8 +275,6 @@ th {
     color: white !important;
 }
 
-/* Add this to your existing style.css */
-
 .error-msg {
     background: #f8d7da;
     color: #721c24;
@@ -189,15 +286,13 @@ th {
     text-align: center;
 }
 
-/* Enhancing the existing input focus */
 .input-group input {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Make sure the login-card doesn't feel too flat */
 .login-card {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px); /* Adds a subtle modern glass effect if the background is complex */
+    backdrop-filter: blur(10px); 
 }
 /* Login Page Specific Styles */
 .login-page {
@@ -236,7 +331,6 @@ th {
     margin-top: 5px;
 }
 
-/* Form Elements */
 .input-group {
     margin-bottom: 20px;
 }
@@ -256,7 +350,7 @@ th {
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.3s ease;
-    box-sizing: border-box; /* Crucial for width */
+    box-sizing: border-box; 
 }
 
 .input-group input:focus {
@@ -307,7 +401,7 @@ th {
 }
 
 .password-wrapper input {
-    padding-right: 50px; /* Make space for the SHOW/HIDE text */
+    padding-right: 50px; 
 }
 
 #togglePassword:hover {
@@ -323,7 +417,7 @@ textarea {
     font-family: inherit;
     font-size: 0.95rem;
     line-height: 1.5;
-    resize: vertical; /* Only allow vertical resizing */
+    resize: vertical; 
     transition: border-color 0.2s, box-shadow 0.2s;
     background-color: #fafafa;
 }
@@ -335,7 +429,6 @@ textarea:focus {
     box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
 }
 
-/* Helper text for the label */
 .label-flex {
     display: flex;
     justify-content: space-between;
@@ -366,7 +459,7 @@ textarea:focus {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
-/* Modern Success Toast */
+
 .alert-toast {
     position: relative;
     background: #ffffff;
@@ -424,7 +517,6 @@ textarea:focus {
     color: #e74c3c;
 }
 
-/* Timer Progress Bar */
 .alert-progress {
     position: absolute;
     bottom: 0;
@@ -448,12 +540,111 @@ textarea:focus {
 
 .input-group input {
   width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't break the layout */
+  box-sizing: border-box; 
 }
 
-/* Optional: Add a hover effect to the eye */
 .input-group span:hover {
   filter: brightness(0.8);
   transform: scale(1.1);
   transition: 0.2s ease;
+}
+
+/* ============================================================
+    NEW: THEME INTEGRATION (OVERRIDES)
+    ============================================================ */
+
+body {
+    background: var(--bg-color);
+    color: var(--text-main);
+}
+
+.container, .login-card {
+    background: var(--card-bg);
+    color: var(--text-main);
+}
+
+.navbar, .login-btn {
+    background: var(--navbar-bg);
+}
+
+.card {
+    background: var(--card-bg);
+    border-top-color: var(--primary-color);
+}
+
+.fill {
+    background: var(--primary-color);
+}
+
+.logo, .nav-links a:hover, .login-footer a {
+    color: var(--primary-color);
+}
+
+.login-page {
+    background: var(--login-gradient);
+}
+
+/* Update Table headers for darker themes */
+th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+}
+
+td {
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.input-group label, .card h3, .hint {
+    color: var(--text-muted);
+}
+
+input, select, textarea {
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+input:focus {
+    border-color: var(--primary-color);
+}
+
+/* Status Pills (From AdminLogs) */
+.status-pill.approved {
+    background: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+/* ============================================================
+    THEME SWITCHER GLASS POPUP STYLING
+    ============================================================ */
+
+.theme-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: var(--glass-bg); /* Uses theme-specific transparent color */
+    backdrop-filter: blur(12px); /* THE GLASS BLUR */
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.theme-modal {
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.theme-option:hover {
+    background: rgba(128, 128, 128, 0.1);
+}
+
+.theme-option.active {
+    border-color: var(--primary-color);
+    background: rgba(var(--primary-color), 0.1);
 }
