@@ -7,16 +7,12 @@ import ForgotPassword from './pages/ForgotPassword';
 import UpdatePassword from './pages/UpdatePassword';
 import Logs from './pages/Logs';
 import AdminLogs from './pages/AdminLogs';
-import ThemeSwitcher from './pages/ThemeSwitcher'; // Assuming it's in your pages folder
+import ThemeSwitcher from './pages/ThemeSwitcher';
 
 function App() {
   return (
     <Router>
-      {/* The Switcher is placed to be globally accessible 
-          and doesn't reload when the page content changes.
-      */}
       <ThemeSwitcher />
-
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
