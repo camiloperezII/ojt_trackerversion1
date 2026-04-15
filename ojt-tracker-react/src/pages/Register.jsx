@@ -57,7 +57,7 @@ const [formData, setFormData] = useState({
             email: formData.email.trim().toLowerCase(),
             full_name: formData.fullName.trim(),
             school: normalizeSchoolName(formData.school),
-            total_required: parseInt(formData.totalRequired) || 600,
+            total_hours_required: parseInt(formData.totalRequired) || 600,
             role: 'user'
           }])
 
@@ -94,7 +94,7 @@ const [formData, setFormData] = useState({
           {/* Row 1 */}
           <div className="input-group">
             <label>Full Name</label>
-            <input type="text" required placeholder="Juan Dela Cruz" onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
+            <input type="text" required placeholder="Please Enter Full Name" onChange={(e) => setFormData({...formData, fullName: e.target.value})} />
           </div>
           <div className="input-group">
             <label>Email Address</label>

@@ -58,7 +58,7 @@ export default function Dashboard() {
   const [timeOut, setTimeOut] = useState('')
   const [task, setTask] = useState('')
 
-  const requiredHours = profile?.total_required || 600
+  const requiredHours = profile?.total_hours_required || 600
 
   useEffect(() => {
     fetchUserAndData()
