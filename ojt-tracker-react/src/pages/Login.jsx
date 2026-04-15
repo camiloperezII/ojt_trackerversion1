@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { useNavigate, Link } from 'react-router-dom'
 
@@ -12,7 +12,15 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showMobileWarning, setShowMobileWarning] = useState(false) // State for mobile check
   const navigate = useNavigate()
+
+  // Check for mobile device on mount
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setShowMobileWarning(true)
+    }
+  }, [])
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -72,10 +80,59 @@ export default function Login() {
 
   return (
     <div className="login-page">
+      {/* MOBILE WARNING POPUP */}
+      {showMobileWarning && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0,
+          width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            border: '4px solid #3E2723', 
+            padding: '30px',
+            textAlign: 'center',
+            boxShadow: '10px 10px 0px #000',
+            maxWidth: '400px',
+            width: '100%'
+          }}>
+            <h2 style={{ color: '#e74c3c', marginTop: 0, fontSize: '22px' }}>📱 MOBILE DETECTED</h2>
+            <p style={{ fontWeight: 'bold', color: '#2c3e50', marginBottom: '10px' }}>
+              For the best experience, please use a **Desktop site**.
+            </p>
+            <p style={{ fontSize: '12px', color: '#7f8c8d', lineHeight: '1.4' }}>
+              The OJT Tracker Command Center and Data Tables are optimized for larger screens. 
+              Some features may look distorted on mobile.
+            </p>
+            <button 
+              onClick={() => setShowMobileWarning(false)}
+              style={{
+                marginTop: '25px',
+                background: '#3E2723',
+                color: 'white',
+                border: 'none',
+                padding: '12px 25px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+                boxShadow: '4px 4px 0px #000'
+              }}
+            >
+              PROCEED ANYWAY
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="login-card" style={{ background: '#ffffff' }}>
         <div className="login-header">
           <img src="/Paombong.png" alt="Logo" style={{ height: '50px', width: 'auto', marginBottom: '10px' }} />
-          {/* THEME AWARE HEADER */}
           <h2 style={{ color: 'var(--primary-color)', letterSpacing: '1px' }}>OJT TRACKER</h2>
           <p style={{ color: '#7f8c8d' }}>Municipality of Paombong</p>
         </div>
@@ -128,11 +185,11 @@ export default function Login() {
           </button>
         </form>
 
-          <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '-10px' }}>
-            <Link to="/forgot-password" style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>
-              Forgot Password?
-            </Link>
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: '20px', marginTop: '-10px' }}>
+          <Link to="/forgot-password" style={{ fontSize: '12px', color: 'var(--primary-color)', textDecoration: 'none', fontWeight: 'bold' }}>
+            Forgot Password?
+          </Link>
+        </div>
 
         <div className="login-footer">
           <p style={{ color: '#7f8c8d' }}>
