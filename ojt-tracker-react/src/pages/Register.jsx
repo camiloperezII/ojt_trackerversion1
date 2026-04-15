@@ -13,7 +13,7 @@ const normalizeSchoolName = (name) => {
     'LCUP': ['LCON', 'LACON', 'LACONSOLE', 'L.C.U.P', 'LACONSOLACION'],
     'BULSU': ['BSU', 'BULACANSTATE', 'BULACANSTATEUNIVERSITY'],
     'CEU': ['CENTROESCOLAR', 'C.E.U'],
-    'UST': ['UNIVERSITYOFSANTOTOMAS', 'U.S.T']
+    
   };
   for (const [officialName, aliases] of Object.entries(mapping)) {
     if (clean === officialName || aliases.includes(clean)) return officialName;
